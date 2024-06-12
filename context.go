@@ -7,18 +7,19 @@ import (
 )
 
 type Context struct {
-	w http.ResponseWriter
-	r *http.Request
-	m map[string]interface{}
+	w      http.ResponseWriter
+	r      *http.Request
+	m      map[string]any
+	params map[string]string
 }
 
 func NewContext(w http.ResponseWriter, r *http.Request) *Context {
-	return &Context{w, r, make(map[string]interface{})}
+	return &Context{w, r, make(map[string]any), make(map[string]string)}
 }
 
 //Response
 
-func (c *Context) Json(code int, value interface{}) error {
+func (c *Context) Json(code int, value any) error {
 	indent, err := json.MarshalIndent(value, "", " ")
 	if err != nil {
 		return err
@@ -40,16 +41,29 @@ func (c *Context) None(code int) error {
 	return nil
 }
 
-//Anu
+//Context
 
-func (c *Context) Get(key string) interface{} {
+func (c *Context) Get(key string) any {
 	return c.m[key]
 }
 
-func (c *Context) Set(key string, value interface{}) {
+func (c *Context) Set(key string, value any) {
 	c.m[key] = value
 }
 
 func (c *Context) Context() context.Context {
 	return c.r.Context()
+}
+
+//Binding
+
+func (c *Context) Bind(dst any) error {
+	decoder := json.NewDecoder(c.r.Body)
+	return decoder.Decode(dst)
+}
+
+//Params
+
+func (c *Context) Param(key string) string {
+	return c.params[key]
 }
