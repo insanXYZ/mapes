@@ -5,11 +5,11 @@ import (
 	"net/http"
 )
 
-type Handler func(ctx *Context)
+type Handler func(ctx *Context) error
 
 type Config struct {
-	Handler Handler
-	Method  string
+	handler Handler
+	method  string
 }
 
 type Mapes struct {
@@ -23,9 +23,9 @@ func New() *Mapes {
 }
 
 func (m *Mapes) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	if f, ok := m.Routes[request.URL.Path]; ok && f.Method == request.Method {
+	if f, ok := m.Routes[request.URL.Path]; ok && f.method == request.Method {
 		context := NewContext(writer, request)
-		f.Handler(context)
+		f.handler(context)
 	} else {
 		writer.WriteHeader(http.StatusBadRequest)
 		writer.Write([]byte("Not found"))
@@ -40,8 +40,8 @@ func (m *Mapes) Start(port string) error {
 
 func (m *Mapes) add(method string, path string, handler Handler) {
 	m.Routes[path] = Config{
-		Handler: handler,
-		Method:  method,
+		handler: handler,
+		method:  method,
 	}
 }
 
