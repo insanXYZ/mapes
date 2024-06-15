@@ -25,6 +25,7 @@ func New() *Mapes {
 }
 
 func (m *Mapes) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+
 	for pattern, config := range m.Routes {
 		if match, params := m.matchPattern(pattern, request.URL.Path); match && config.method == request.Method {
 			context := NewContext(writer, request)
