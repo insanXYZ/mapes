@@ -1,3 +1,15 @@
+<p align="center">
+  <img src="./mapes.png" alt="image" width="700px">
+</p>
+
+# Installation
+```sh
+go get github.com/insanXYZ/mapes
+```
+
+# Example
+
+```go
 package main
 
 import (
@@ -12,20 +24,25 @@ type CreateUser struct {
 }
 
 func main() {
+	//mapes instance
 	m := mapes.New()
 
 	m.Get("/", func(ctx *mapes.Context) error {
 		return ctx.String(200, "Hello world")
 	})
-
+	
+	//get parameters
 	m.Get("/hello/:name/from/:address", func(ctx *mapes.Context) error {
 		return ctx.String(200, fmt.Sprintf("Hello, my name is %s from %s", ctx.Param("name"), ctx.Param("address")))
 	})
 
+	//get query parameters
+	//http:localhost:port/queryParams?last=yourname
 	m.Get("/queryParams", func(ctx *mapes.Context) error {
 		return ctx.String(200, ctx.Query("last"))
 	})
 
+	//binding with struct
 	m.Post("/create-user/:address", func(ctx *mapes.Context) error {
 		user := new(CreateUser)
 		err := ctx.Bind(user)
@@ -36,6 +53,7 @@ func main() {
 		return ctx.Json(200, user)
 	})
 
+	//grouping route
 	group := m.Group("/api")
 
 	group.Get(".contacts", func(ctx *mapes.Context) error {
@@ -50,3 +68,4 @@ func main() {
 		panic(err.Error())
 	}
 }
+```
