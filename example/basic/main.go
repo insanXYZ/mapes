@@ -5,9 +5,10 @@ import (
 	"github.com/insanXYZ/mapes"
 )
 
-type FormUser struct {
+type CreateUser struct {
 	Name    string `form:"name"`
-	Address string `form:"address"`
+	Address string `param:"address"`
+	Email   string `query:"email"`
 }
 
 func main() {
@@ -21,12 +22,15 @@ func main() {
 	m.Get("/queryParams", func(ctx *mapes.Context) error {
 		return ctx.String(200, ctx.Query("last"))
 	})
-	m.Post("/form", func(ctx *mapes.Context) error {
-		form := FormUser{}
-		if err := ctx.Bind(&form); err != nil {
-			panic(err.Error())
+	m.Post("/create-user/:address", func(ctx *mapes.Context) error {
+		user := new(CreateUser)
+		err := ctx.Bind(user)
+		if err != nil {
+			return err
 		}
-		return ctx.Json(200, form)
+
+		return ctx.Json(200, user)
+
 	})
 	err := m.Start("1323")
 	if err != nil {
