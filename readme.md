@@ -56,7 +56,7 @@ func main() {
 	//grouping route
 	group := m.Group("/api")
 
-	group.Get(".contacts", func(ctx *mapes.Context) error {
+	group.Get("/contacts", func(ctx *mapes.Context) error {
 		return ctx.Json(200, map[string]string{
 			"name":  "Jhon Doe",
 			"email": "jhondoe@example.com",
