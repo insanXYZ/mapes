@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/insanXYZ/mapes"
 )
 
@@ -17,6 +18,8 @@ func main() {
 	m.Get("/", func(ctx *mapes.Context) error {
 		return ctx.String(200, "Hello world")
 	})
+
+	m.Static("/static", "resources")
 
 	m.Get("/hello/:name/from/:address", func(ctx *mapes.Context) error {
 		return ctx.String(200, fmt.Sprintf("Hello, my name is %s from %s", ctx.Param("name"), ctx.Param("address")))
@@ -38,7 +41,7 @@ func main() {
 
 	group := m.Group("/api")
 
-	group.Get(".contacts", func(ctx *mapes.Context) error {
+	group.Get("/contacts", func(ctx *mapes.Context) error {
 		return ctx.Json(200, map[string]string{
 			"name":  "Jhon Doe",
 			"email": "jhondoe@example.com",

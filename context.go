@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"encoding/xml"
+	"html/template"
+	"mime/multipart"
 	"net/http"
 	"reflect"
 	"slices"
@@ -142,6 +144,19 @@ func (c *Context) Query(key string) string {
 	return c.Request.URL.Query().Get(key)
 }
 
+func (c *Context) FormFile(key string) (*multipart.FileHeader, error) {
+	_, m, err := c.Request.FormFile(key)
+	if err != nil {
+		return nil, err
+	}
+
+	return m, nil
+}
+
+func (c *Context) MultipartForm() *multipart.Form {
+	return c.Request.MultipartForm
+}
+
 func (c *Context) SetHeader(key, value string) {
 	c.Writer.Header().Set(key, value)
 }
@@ -151,9 +166,14 @@ func (c *Context) AddHeader(key, value string) {
 }
 
 func (c *Context) FormValues(key string) string {
-	return c.Request.FormValue(key)
+	return c.Request.PostFormValue(key)
 }
 
 func (c *Context) SetCookie(cookie *http.Cookie) {
 	http.SetCookie(c.Writer, cookie)
+}
+
+func (c *Context) RenderHtml(name string, data any) error {
+	tmpl := template.Must(template.ParseFiles(name))
+	return tmpl.Execute(c.Writer, data)
 }

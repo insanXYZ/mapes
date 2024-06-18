@@ -94,8 +94,6 @@ func (m *Mapes) matchPattern(pattern, path string) (bool, map[string]string) {
 	return true, params
 }
 
-//Route
-
 func (m *Mapes) Use(middlewares ...Handler) {
 	m.middlewares = append(m.middlewares, middlewares...)
 }
@@ -108,35 +106,53 @@ func (m *Mapes) add(method string, path string, handler Handler, middlewares []H
 	}
 }
 
-func (m *Mapes) Get(route string, handler Handler, middlewares ...Handler) {
-	m.add(http.MethodGet, route, handler, middlewares)
+func (m *Mapes) Get(path string, handler Handler, middlewares ...Handler) {
+	m.add(http.MethodGet, path, handler, middlewares)
 }
 
-func (m *Mapes) Post(route string, handler Handler, middlewares ...Handler) {
-	m.add(http.MethodPost, route, handler, middlewares)
+func (m *Mapes) Post(path string, handler Handler, middlewares ...Handler) {
+	m.add(http.MethodPost, path, handler, middlewares)
 }
 
-func (m *Mapes) Options(route string, handler Handler, middlewares ...Handler) {
-	m.add(http.MethodOptions, route, handler, middlewares)
+func (m *Mapes) Options(path string, handler Handler, middlewares ...Handler) {
+	m.add(http.MethodOptions, path, handler, middlewares)
 }
 
-func (m *Mapes) Head(route string, handler Handler, middlewares ...Handler) {
-	m.add(http.MethodHead, route, handler, middlewares)
+func (m *Mapes) Head(path string, handler Handler, middlewares ...Handler) {
+	m.add(http.MethodHead, path, handler, middlewares)
 }
 
-func (m *Mapes) Delete(route string, handler Handler, middlewares ...Handler) {
-	m.add(http.MethodDelete, route, handler, middlewares)
+func (m *Mapes) Delete(path string, handler Handler, middlewares ...Handler) {
+	m.add(http.MethodDelete, path, handler, middlewares)
 }
 
-func (m *Mapes) Put(route string, handler Handler, middlewares ...Handler) {
-	m.add(http.MethodPut, route, handler, middlewares)
+func (m *Mapes) Put(path string, handler Handler, middlewares ...Handler) {
+	m.add(http.MethodPut, path, handler, middlewares)
 }
 
-func (m *Mapes) Patch(route string, handler Handler, middlewares ...Handler) {
-	m.add(http.MethodPatch, route, handler, middlewares)
+func (m *Mapes) Patch(path string, handler Handler, middlewares ...Handler) {
+	m.add(http.MethodPatch, path, handler, middlewares)
 }
 
-//Router Group
+func (m *Mapes) Static(path string, fsRoot string, middlewares ...Handler) {
+	dir := http.Dir("./"+fsRoot)
+
+	if string(path[len(path)-1]) == "/" {
+		path = path[:len(path)-1]
+	}
+
+	fileServer := http.StripPrefix(path, http.FileServer(dir))
+	staticHandler := func(ctx *Context) error {
+		fileServer.ServeHTTP(ctx.Writer, ctx.Request)
+		return nil
+	}
+
+	if string(path[len(path)-1]) != "/" {
+		path += "/"
+	}
+
+	m.Get(path+":_", staticHandler, middlewares...)
+}
 
 func (m *Mapes) Group(pattern string) *RouterGroup {
 	return &RouterGroup{
@@ -158,30 +174,30 @@ func (rt *RouterGroup) Use(middlewares ...Handler) {
 	rt.middlewares = append(rt.middlewares, middlewares...)
 }
 
-func (rt *RouterGroup) Get(route string, handler Handler, middlewares ...Handler) {
-	rt.add(http.MethodGet, route, handler, middlewares)
+func (rt *RouterGroup) Get(path string, handler Handler, middlewares ...Handler) {
+	rt.add(http.MethodGet, path, handler, middlewares)
 }
 
-func (rt *RouterGroup) Options(route string, handler Handler, middlewares ...Handler) {
-	rt.add(http.MethodOptions, route, handler, middlewares)
+func (rt *RouterGroup) Options(path string, handler Handler, middlewares ...Handler) {
+	rt.add(http.MethodOptions, path, handler, middlewares)
 }
 
-func (rt *RouterGroup) Head(route string, handler Handler, middlewares ...Handler) {
-	rt.add(http.MethodHead, route, handler, middlewares)
+func (rt *RouterGroup) Head(path string, handler Handler, middlewares ...Handler) {
+	rt.add(http.MethodHead, path, handler, middlewares)
 }
 
-func (rt *RouterGroup) Post(route string, handler Handler, middlewares ...Handler) {
-	rt.add(http.MethodPost, route, handler, middlewares)
+func (rt *RouterGroup) Post(path string, handler Handler, middlewares ...Handler) {
+	rt.add(http.MethodPost, path, handler, middlewares)
 }
 
-func (rt *RouterGroup) Delete(route string, handler Handler, middlewares ...Handler) {
-	rt.add(http.MethodDelete, route, handler, middlewares)
+func (rt *RouterGroup) Delete(path string, handler Handler, middlewares ...Handler) {
+	rt.add(http.MethodDelete, path, handler, middlewares)
 }
 
-func (rt *RouterGroup) Put(route string, handler Handler, middlewares ...Handler) {
-	rt.add(http.MethodPut, route, handler, middlewares)
+func (rt *RouterGroup) Put(path string, handler Handler, middlewares ...Handler) {
+	rt.add(http.MethodPut, path, handler, middlewares)
 }
 
-func (rt *RouterGroup) Patch(route string, handler Handler, middlewares ...Handler) {
-	rt.add(http.MethodPatch, route, handler, middlewares)
+func (rt *RouterGroup) Patch(path string, handler Handler, middlewares ...Handler) {
+	rt.add(http.MethodPatch, path, handler, middlewares)
 }
