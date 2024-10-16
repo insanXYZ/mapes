@@ -12,12 +12,29 @@ type CreateUser struct {
 	Email   string `query:"email"`
 }
 
+var middlewareBad mapes.MiddlewareHandler = func(next mapes.Handler) mapes.Handler {
+	return func(ctx *mapes.Context) error {
+		return ctx.String(400, "your request is bad")
+	}
+}
+
+var middlewareGood mapes.MiddlewareHandler = func(next mapes.Handler) mapes.Handler {
+	return func(ctx *mapes.Context) error {
+		ctx.Set("name", "insan nazal awal")
+		return next(ctx)
+	}
+}
+
 func main() {
 	m := mapes.New()
 
-	m.Get("/", func(ctx *mapes.Context) error {
+	m.Get("/bad", func(ctx *mapes.Context) error {
 		return ctx.String(200, "Hello world")
-	})
+	}, middlewareBad)
+
+	m.Get("/good", func(ctx *mapes.Context) error {
+		return ctx.String(200, ctx.Get("name").(string))
+	}, middlewareGood)
 
 	m.Static("/static", "resources")
 
