@@ -12,53 +12,53 @@ type (
 	MiddlewareHandler func(next Handler) Handler
 )
 
-type RouteConfig struct {
+type routeConfig struct {
 	handler     Handler
 	method      string
 	middlewares []MiddlewareHandler
 }
 
-type RouterGroup struct {
+type routerGroup struct {
 	prefix      string
 	middlewares []MiddlewareHandler
 	maps        *Mapes
 }
 
 type Mapes struct {
-	routes      map[string]RouteConfig
+	routes      map[string]routeConfig
 	middlewares []MiddlewareHandler
 }
 
 func New() *Mapes {
 	return &Mapes{
-		routes: make(map[string]RouteConfig),
+		routes: make(map[string]routeConfig),
 	}
 }
 
 func (m *Mapes) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	context := NewContext(writer, request)
+
 	for pattern, config := range m.routes {
 		if match, params := m.matchPattern(pattern, request.URL.Path); match && config.method == request.Method {
-			context := NewContext(writer, request)
 			context.params = params
-
 			handlers := config.handler
 
 			for _, middleware := range config.middlewares {
 				handlers = middleware(handlers)
 			}
 
-			err := handlers(context)
-			if err != nil {
-				context.String(500, "server error")
+			if err := handlers(context); err != nil {
+				context.Json(500, map[string]string{
+					"message": "server error",
+				})
 			}
-
 			return
-
 		}
 	}
 
-	writer.WriteHeader(http.StatusNotFound)
-	writer.Write([]byte("Not found"))
+	context.Json(404, map[string]string{
+		"message": "not found",
+	})
 }
 
 func (m *Mapes) Start(port string) error {
@@ -102,7 +102,7 @@ func (m *Mapes) Use(middlewares ...MiddlewareHandler) {
 }
 
 func (m *Mapes) add(method string, path string, handler Handler, middlewares []MiddlewareHandler) {
-	m.routes[path] = RouteConfig{
+	m.routes[path] = routeConfig{
 		handler:     handler,
 		method:      method,
 		middlewares: middlewares,
@@ -157,50 +157,50 @@ func (m *Mapes) Static(path string, fsRoot string, middlewares ...MiddlewareHand
 	m.Get(path+":_", staticHandler, middlewares...)
 }
 
-func (m *Mapes) Group(pattern string) *RouterGroup {
-	return &RouterGroup{
+func (m *Mapes) Group(pattern string) *routerGroup {
+	return &routerGroup{
 		prefix:      pattern,
 		middlewares: m.middlewares,
 		maps:        m,
 	}
 }
 
-func (rt *RouterGroup) add(method string, path string, handler Handler, middlewares []MiddlewareHandler) {
-	rt.maps.routes[rt.prefix+path] = RouteConfig{
+func (rt *routerGroup) add(method string, path string, handler Handler, middlewares []MiddlewareHandler) {
+	rt.maps.routes[rt.prefix+path] = routeConfig{
 		handler:     handler,
 		method:      method,
 		middlewares: append(rt.middlewares, middlewares...),
 	}
 }
 
-func (rt *RouterGroup) Use(middlewares ...MiddlewareHandler) {
+func (rt *routerGroup) Use(middlewares ...MiddlewareHandler) {
 	rt.middlewares = append(rt.middlewares, middlewares...)
 }
 
-func (rt *RouterGroup) Get(path string, handler Handler, middlewares ...MiddlewareHandler) {
+func (rt *routerGroup) Get(path string, handler Handler, middlewares ...MiddlewareHandler) {
 	rt.add(http.MethodGet, path, handler, middlewares)
 }
 
-func (rt *RouterGroup) Options(path string, handler Handler, middlewares ...MiddlewareHandler) {
+func (rt *routerGroup) Options(path string, handler Handler, middlewares ...MiddlewareHandler) {
 	rt.add(http.MethodOptions, path, handler, middlewares)
 }
 
-func (rt *RouterGroup) Head(path string, handler Handler, middlewares ...MiddlewareHandler) {
+func (rt *routerGroup) Head(path string, handler Handler, middlewares ...MiddlewareHandler) {
 	rt.add(http.MethodHead, path, handler, middlewares)
 }
 
-func (rt *RouterGroup) Post(path string, handler Handler, middlewares ...MiddlewareHandler) {
+func (rt *routerGroup) Post(path string, handler Handler, middlewares ...MiddlewareHandler) {
 	rt.add(http.MethodPost, path, handler, middlewares)
 }
 
-func (rt *RouterGroup) Delete(path string, handler Handler, middlewares ...MiddlewareHandler) {
+func (rt *routerGroup) Delete(path string, handler Handler, middlewares ...MiddlewareHandler) {
 	rt.add(http.MethodDelete, path, handler, middlewares)
 }
 
-func (rt *RouterGroup) Put(path string, handler Handler, middlewares ...MiddlewareHandler) {
+func (rt *routerGroup) Put(path string, handler Handler, middlewares ...MiddlewareHandler) {
 	rt.add(http.MethodPut, path, handler, middlewares)
 }
 
-func (rt *RouterGroup) Patch(path string, handler Handler, middlewares ...MiddlewareHandler) {
+func (rt *routerGroup) Patch(path string, handler Handler, middlewares ...MiddlewareHandler) {
 	rt.add(http.MethodPatch, path, handler, middlewares)
 }
