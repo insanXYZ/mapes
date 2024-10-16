@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="./mapes.png" alt="image" width="700px">
-</p>
+![mapes](https://github.com/user-attachments/assets/6718512b-17ea-4af2-8279-d9d83022e4c4)
 
 # Installation
 ```sh
